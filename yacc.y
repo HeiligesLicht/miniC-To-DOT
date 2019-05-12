@@ -57,13 +57,18 @@ liste_declarateurs	: liste_declarateurs ',' declarateur
 					|	declarateur
 
 declarateur : identificateur 
-	    | declarateur '[' constante ']'
+	    | identificateur dec_tab
+
+dec_tab : '[' constante ']' dec_tab
+		| '[' constante ']'
 
 fonction : type identificateur  '(' liste_parms  ')'  bloc { char* s = NULL;
 															 asprintf(&s, "[label=\"%s, %s\" shape=invtrapezium color=blue]", $2, $1);
 															 $$ = create_node( s);
 															 $$->child = $6;
-															 all_functions = add_function(create_function(strcmp($1, "int") == 0? INT : VOID, $2, $4), all_functions);} 
+
+															 function* f = add_function(create_function(strcmp($1, "int") == 0? INT : VOID, $2, $4), all_functions);
+															 f->clojure = head_scope(scopes); } 
 	    | C_EXTERN type identificateur  '(' liste_parms  ')' ';' {
 			$$ = NULL;
 			all_functions = add_function(create_function(strcmp($2, "int") == 0? INT : VOID, $3, $5), all_functions);
@@ -137,7 +142,7 @@ saut : C_BREAK ';' { $$ = create_node("[label=\"BREAK\" shape=box]"); }
 
 affectation : variable '=' expression { $$ = create_node("[label=\":=\"]"); $$->child = $1; $$->child->sibling = $3; }
 
-bloc :  '{' liste_declarations liste_instructions '}' { $$ = create_node("[label=\"BLOC\"]"); $$->child = $3; }
+bloc :  '{' {scopes = push_scope(init_scope(), scopes);} liste_declarations liste_instructions '}' { $$ = create_node("[label=\"BLOC\"]"); $$->child = $4; scopes = pop_scope(scopes) }
 
 appel : identificateur '(' liste_expressions ')' ';' {
 	char* s = NULL;
@@ -357,7 +362,13 @@ scope* push_scope(scope* to_push, scope* scopes) {
 
 scope* pop_scope(scope* scopes) {
 	scope* s = scopes->next;
-	free(scopes);
+	scopes->next = NULL;
+	return s;
+}
+
+scope* head_scope(scope* scopes) {
+	scope* s = scopes;
+	scopes->next = NULL;
 	return s;
 }
 

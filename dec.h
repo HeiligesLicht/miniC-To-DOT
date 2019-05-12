@@ -13,41 +13,43 @@ typedef struct _func_list {
 
 node_dot* create_node(char* label);
 void free_node(node_dot* root);
+void free_all_nodes(func_list* root);
 void print_graph(node_dot* root);
 void print_compilation(func_list* root);
 func_list* add_func(node_dot* node, func_list* list);
 
 /* error-check related */
 
-typedef enum ftypes {INT, VOID} func_type;
-typedef enum dtypes {INT} dec_type;
+typedef enum types {INT, VOID} types;
 
 /* FUNCTIONS */
 
 typedef struct _param {
-	variable* var;
+	types type;
 	char* name;
 	struct _param *next;
 } param;
 
 typedef struct _function {
-	func_type type;
+	types type;
 	char* name;
 	int value;
 	struct _param *params;
+	struct _scope *clojure;
 } function;
 
 typedef struct _functions {
-	function f;
-	struct _function *next;
+	function* f;
+	struct _functions *next;
 } functions;
 
 
 /* VARIABLES */
 
 typedef struct _variable {
-	dec_type type;
+	types type;
 	char* name;
+	int value;
 	struct _variable *next;
 } variable;
 
@@ -56,15 +58,19 @@ typedef struct _scope {
 	struct _scope *next;
 } scope;
 
-function* create_function(func_type type, char* name, param* pars);
-function* add_function(function* func, functions* func_list);
-function* search_function(char* name, functions* func_list);
+param* create_param(types type, char* name);
+param* add_param(param* first, param* rest);
 
-variable* create_variable(dec_type type, char* name, int value);
-variable* add_variable(variable* var, scope* scope);
+function* create_function(types type, char* name, param* pars);
+functions* add_function(function* func, functions* func_list);
+function* search_function(char* name, functions* func_list);
+void print_function(function* f);
+void print_functions(functions* fs);
+
+variable* create_variable(types type, char* name, int value);
+scope* add_variable(variable* var, scope* scope);
 variable* search_variable(char* name, scope* scope);
 
 scope* init_scope();
-
-assert_int(variable* var);
-assert_int(function* f);
+scope* push_scope(scope* to_push, scope* scopes);
+scope* pop_scope(scope* scopes);

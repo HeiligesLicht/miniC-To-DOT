@@ -1,0 +1,2214 @@
+Grammar
+
+    0 $accept: programme $end
+
+    1 programme: liste_declarations liste_fonctions
+
+    2 liste_declarations: liste_declarations declaration
+    3                   | %empty
+
+    4 liste_fonctions: fonction liste_fonctions
+    5                | fonction
+
+    6 declaration: type liste_declarateurs ';'
+
+    7 liste_declarateurs: liste_declarateurs ',' declarateur
+    8                   | declarateur
+
+    9 declarateur: identificateur
+   10            | declarateur '[' constante ']'
+
+   11 fonction: type identificateur '(' liste_parms ')' bloc
+   12         | C_EXTERN type identificateur '(' liste_parms ')' ';'
+
+   13 type: C_VOID
+   14     | C_INT
+
+   15 liste_parms: l_parms
+   16            | %empty
+
+   17 l_parms: parm
+   18        | parm ',' l_parms
+
+   19 parm: C_INT identificateur
+
+   20 liste_instructions: instruction liste_instructions
+   21                   | %empty
+
+   22 instruction: iteration
+   23            | selection
+   24            | saut
+   25            | affectation ';'
+   26            | bloc
+   27            | appel
+
+   28 iteration: C_FOR '(' affectation ';' condition ';' affectation ')' instruction
+   29          | C_WHILE '(' condition ')' instruction
+
+   30 selection: C_IF '(' condition ')' instruction
+   31          | C_IF '(' condition ')' instruction C_ELSE instruction
+   32          | C_SWITCH '(' expression ')' '{' switch_body '}'
+
+   33 switch_body: C_CASE constante ':' liste_instructions switch_body
+   34            | C_DEFAULT ':' liste_instructions
+
+   35 saut: C_BREAK ';'
+   36     | C_RETURN ';'
+   37     | C_RETURN expression ';'
+
+   38 affectation: variable '=' expression
+
+   39 bloc: '{' liste_declarations liste_instructions '}'
+
+   40 appel: identificateur '(' liste_expressions ')' ';'
+
+   41 variable: identificateur
+   42         | identificateur var_tab
+
+   43 var_tab: '[' expression ']' var_tab
+   44        | '[' expression ']'
+
+   45 expression: '(' expression ')'
+   46           | expression C_PLUS expression
+   47           | expression C_MINUS expression
+   48           | expression C_MULT expression
+   49           | expression C_DIV expression
+   50           | expression LEFT_SHIFT expression
+   51           | expression RIGHT_SHIFT expression
+   52           | expression C_BIN_AND expression
+   53           | expression C_BIN_OR expression
+   54           | C_MINUS expression
+   55           | constante
+   56           | variable
+   57           | identificateur '(' liste_expressions ')'
+
+   58 liste_expressions: l_expressions
+   59                  | %empty
+
+   60 l_expressions: expression
+   61              | expression ',' l_expressions
+
+   62 condition: C_NOT '(' condition ')'
+   63          | '(' condition ')'
+   64          | condition LOGICAL_AND condition
+   65          | condition LOGICAL_OR condition
+   66          | expression C_LT expression
+   67          | expression C_GT expression
+   68          | expression GTE expression
+   69          | expression LTE expression
+   70          | expression EQUALS expression
+   71          | expression NOT_EQUALS expression
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 11 12 28 29 30 31 32 40 45 57 62 63
+')' (41) 11 12 28 29 30 31 32 40 45 57 62 63
+',' (44) 7 18 61
+':' (58) 33 34
+';' (59) 6 12 25 28 35 36 37 40
+'=' (61) 38
+'[' (91) 10 43 44
+']' (93) 10 43 44
+'{' (123) 32 39
+'}' (125) 32 39
+error (256)
+C_INT (258) 14 19
+C_VOID (259) 13
+C_IF (260) 30 31
+C_ELSE (261) 31
+C_SWITCH (262) 32
+C_CASE (263) 33
+C_BREAK (264) 35
+C_EXTERN (265) 12
+C_DEFAULT (266) 34
+C_FOR (267) 28
+C_WHILE (268) 29
+C_RETURN (269) 36 37
+EQUALS (270) 70
+GTE (271) 68
+LTE (272) 69
+NOT_EQUALS (273) 71
+LEFT_SHIFT (274) 50
+RIGHT_SHIFT (275) 51
+LOGICAL_AND (276) 64
+LOGICAL_OR (277) 65
+C_PLUS (278) 46
+C_MINUS (279) 47 54
+C_MULT (280) 48
+C_DIV (281) 49
+C_BIN_AND (282) 52
+C_BIN_OR (283) 53
+C_NOT (284) 62
+C_LT (285) 66
+C_GT (286) 67
+identificateur (287) 9 11 12 19 40 41 42 57
+constante (288) 10 33 55
+UNARY_MINUS (289)
+THEN (290)
+
+
+Nonterminals, with rules where they appear
+
+$accept (46)
+    on left: 0
+programme (47)
+    on left: 1, on right: 0
+liste_declarations (48)
+    on left: 2 3, on right: 1 2 39
+liste_fonctions (49)
+    on left: 4 5, on right: 1 4
+declaration (50)
+    on left: 6, on right: 2
+liste_declarateurs (51)
+    on left: 7 8, on right: 6 7
+declarateur (52)
+    on left: 9 10, on right: 7 8 10
+fonction (53)
+    on left: 11 12, on right: 4 5
+type (54)
+    on left: 13 14, on right: 6 11 12
+liste_parms (55)
+    on left: 15 16, on right: 11 12
+l_parms (56)
+    on left: 17 18, on right: 15 18
+parm (57)
+    on left: 19, on right: 17 18
+liste_instructions (58)
+    on left: 20 21, on right: 20 33 34 39
+instruction (59)
+    on left: 22 23 24 25 26 27, on right: 20 28 29 30 31
+iteration (60)
+    on left: 28 29, on right: 22
+selection (61)
+    on left: 30 31 32, on right: 23
+switch_body (62)
+    on left: 33 34, on right: 32 33
+saut (63)
+    on left: 35 36 37, on right: 24
+affectation (64)
+    on left: 38, on right: 25 28
+bloc (65)
+    on left: 39, on right: 11 26
+appel (66)
+    on left: 40, on right: 27
+variable (67)
+    on left: 41 42, on right: 38 56
+var_tab (68)
+    on left: 43 44, on right: 42 43
+expression (69)
+    on left: 45 46 47 48 49 50 51 52 53 54 55 56 57, on right: 32 37
+    38 43 44 45 46 47 48 49 50 51 52 53 54 60 61 66 67 68 69 70 71
+liste_expressions (70)
+    on left: 58 59, on right: 40 57
+l_expressions (71)
+    on left: 60 61, on right: 58 61
+condition (72)
+    on left: 62 63 64 65 66 67 68 69 70 71, on right: 28 29 30 31 62
+    63 64 65
+
+
+State 0
+
+    0 $accept: . programme $end
+
+    $default  reduce using rule 3 (liste_declarations)
+
+    programme           go to state 1
+    liste_declarations  go to state 2
+
+
+State 1
+
+    0 $accept: programme . $end
+
+    $end  shift, and go to state 3
+
+
+State 2
+
+    1 programme: liste_declarations . liste_fonctions
+    2 liste_declarations: liste_declarations . declaration
+
+    C_INT     shift, and go to state 4
+    C_VOID    shift, and go to state 5
+    C_EXTERN  shift, and go to state 6
+
+    liste_fonctions  go to state 7
+    declaration      go to state 8
+    fonction         go to state 9
+    type             go to state 10
+
+
+State 3
+
+    0 $accept: programme $end .
+
+    $default  accept
+
+
+State 4
+
+   14 type: C_INT .
+
+    $default  reduce using rule 14 (type)
+
+
+State 5
+
+   13 type: C_VOID .
+
+    $default  reduce using rule 13 (type)
+
+
+State 6
+
+   12 fonction: C_EXTERN . type identificateur '(' liste_parms ')' ';'
+
+    C_INT   shift, and go to state 4
+    C_VOID  shift, and go to state 5
+
+    type  go to state 11
+
+
+State 7
+
+    1 programme: liste_declarations liste_fonctions .
+
+    $default  reduce using rule 1 (programme)
+
+
+State 8
+
+    2 liste_declarations: liste_declarations declaration .
+
+    $default  reduce using rule 2 (liste_declarations)
+
+
+State 9
+
+    4 liste_fonctions: fonction . liste_fonctions
+    5                | fonction .
+
+    C_INT     shift, and go to state 4
+    C_VOID    shift, and go to state 5
+    C_EXTERN  shift, and go to state 6
+
+    $default  reduce using rule 5 (liste_fonctions)
+
+    liste_fonctions  go to state 12
+    fonction         go to state 9
+    type             go to state 13
+
+
+State 10
+
+    6 declaration: type . liste_declarateurs ';'
+   11 fonction: type . identificateur '(' liste_parms ')' bloc
+
+    identificateur  shift, and go to state 14
+
+    liste_declarateurs  go to state 15
+    declarateur         go to state 16
+
+
+State 11
+
+   12 fonction: C_EXTERN type . identificateur '(' liste_parms ')' ';'
+
+    identificateur  shift, and go to state 17
+
+
+State 12
+
+    4 liste_fonctions: fonction liste_fonctions .
+
+    $default  reduce using rule 4 (liste_fonctions)
+
+
+State 13
+
+   11 fonction: type . identificateur '(' liste_parms ')' bloc
+
+    identificateur  shift, and go to state 18
+
+
+State 14
+
+    9 declarateur: identificateur .
+   11 fonction: type identificateur . '(' liste_parms ')' bloc
+
+    '('  shift, and go to state 19
+
+    $default  reduce using rule 9 (declarateur)
+
+
+State 15
+
+    6 declaration: type liste_declarateurs . ';'
+    7 liste_declarateurs: liste_declarateurs . ',' declarateur
+
+    ';'  shift, and go to state 20
+    ','  shift, and go to state 21
+
+
+State 16
+
+    8 liste_declarateurs: declarateur .
+   10 declarateur: declarateur . '[' constante ']'
+
+    '['  shift, and go to state 22
+
+    $default  reduce using rule 8 (liste_declarateurs)
+
+
+State 17
+
+   12 fonction: C_EXTERN type identificateur . '(' liste_parms ')' ';'
+
+    '('  shift, and go to state 23
+
+
+State 18
+
+   11 fonction: type identificateur . '(' liste_parms ')' bloc
+
+    '('  shift, and go to state 19
+
+
+State 19
+
+   11 fonction: type identificateur '(' . liste_parms ')' bloc
+
+    C_INT  shift, and go to state 24
+
+    $default  reduce using rule 16 (liste_parms)
+
+    liste_parms  go to state 25
+    l_parms      go to state 26
+    parm         go to state 27
+
+
+State 20
+
+    6 declaration: type liste_declarateurs ';' .
+
+    $default  reduce using rule 6 (declaration)
+
+
+State 21
+
+    7 liste_declarateurs: liste_declarateurs ',' . declarateur
+
+    identificateur  shift, and go to state 28
+
+    declarateur  go to state 29
+
+
+State 22
+
+   10 declarateur: declarateur '[' . constante ']'
+
+    constante  shift, and go to state 30
+
+
+State 23
+
+   12 fonction: C_EXTERN type identificateur '(' . liste_parms ')' ';'
+
+    C_INT  shift, and go to state 24
+
+    $default  reduce using rule 16 (liste_parms)
+
+    liste_parms  go to state 31
+    l_parms      go to state 26
+    parm         go to state 27
+
+
+State 24
+
+   19 parm: C_INT . identificateur
+
+    identificateur  shift, and go to state 32
+
+
+State 25
+
+   11 fonction: type identificateur '(' liste_parms . ')' bloc
+
+    ')'  shift, and go to state 33
+
+
+State 26
+
+   15 liste_parms: l_parms .
+
+    $default  reduce using rule 15 (liste_parms)
+
+
+State 27
+
+   17 l_parms: parm .
+   18        | parm . ',' l_parms
+
+    ','  shift, and go to state 34
+
+    $default  reduce using rule 17 (l_parms)
+
+
+State 28
+
+    9 declarateur: identificateur .
+
+    $default  reduce using rule 9 (declarateur)
+
+
+State 29
+
+    7 liste_declarateurs: liste_declarateurs ',' declarateur .
+   10 declarateur: declarateur . '[' constante ']'
+
+    '['  shift, and go to state 22
+
+    $default  reduce using rule 7 (liste_declarateurs)
+
+
+State 30
+
+   10 declarateur: declarateur '[' constante . ']'
+
+    ']'  shift, and go to state 35
+
+
+State 31
+
+   12 fonction: C_EXTERN type identificateur '(' liste_parms . ')' ';'
+
+    ')'  shift, and go to state 36
+
+
+State 32
+
+   19 parm: C_INT identificateur .
+
+    $default  reduce using rule 19 (parm)
+
+
+State 33
+
+   11 fonction: type identificateur '(' liste_parms ')' . bloc
+
+    '{'  shift, and go to state 37
+
+    bloc  go to state 38
+
+
+State 34
+
+   18 l_parms: parm ',' . l_parms
+
+    C_INT  shift, and go to state 24
+
+    l_parms  go to state 39
+    parm     go to state 27
+
+
+State 35
+
+   10 declarateur: declarateur '[' constante ']' .
+
+    $default  reduce using rule 10 (declarateur)
+
+
+State 36
+
+   12 fonction: C_EXTERN type identificateur '(' liste_parms ')' . ';'
+
+    ';'  shift, and go to state 40
+
+
+State 37
+
+   39 bloc: '{' . liste_declarations liste_instructions '}'
+
+    $default  reduce using rule 3 (liste_declarations)
+
+    liste_declarations  go to state 41
+
+
+State 38
+
+   11 fonction: type identificateur '(' liste_parms ')' bloc .
+
+    $default  reduce using rule 11 (fonction)
+
+
+State 39
+
+   18 l_parms: parm ',' l_parms .
+
+    $default  reduce using rule 18 (l_parms)
+
+
+State 40
+
+   12 fonction: C_EXTERN type identificateur '(' liste_parms ')' ';' .
+
+    $default  reduce using rule 12 (fonction)
+
+
+State 41
+
+    2 liste_declarations: liste_declarations . declaration
+   39 bloc: '{' liste_declarations . liste_instructions '}'
+
+    C_INT           shift, and go to state 4
+    C_VOID          shift, and go to state 5
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    $default  reduce using rule 21 (liste_instructions)
+
+    declaration         go to state 8
+    type                go to state 49
+    liste_instructions  go to state 50
+    instruction         go to state 51
+    iteration           go to state 52
+    selection           go to state 53
+    saut                go to state 54
+    affectation         go to state 55
+    bloc                go to state 56
+    appel               go to state 57
+    variable            go to state 58
+
+
+State 42
+
+   30 selection: C_IF . '(' condition ')' instruction
+   31          | C_IF . '(' condition ')' instruction C_ELSE instruction
+
+    '('  shift, and go to state 59
+
+
+State 43
+
+   32 selection: C_SWITCH . '(' expression ')' '{' switch_body '}'
+
+    '('  shift, and go to state 60
+
+
+State 44
+
+   35 saut: C_BREAK . ';'
+
+    ';'  shift, and go to state 61
+
+
+State 45
+
+   28 iteration: C_FOR . '(' affectation ';' condition ';' affectation ')' instruction
+
+    '('  shift, and go to state 62
+
+
+State 46
+
+   29 iteration: C_WHILE . '(' condition ')' instruction
+
+    '('  shift, and go to state 63
+
+
+State 47
+
+   36 saut: C_RETURN . ';'
+   37     | C_RETURN . expression ';'
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    ';'             shift, and go to state 67
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 70
+
+
+State 48
+
+   40 appel: identificateur . '(' liste_expressions ')' ';'
+   41 variable: identificateur .
+   42         | identificateur . var_tab
+
+    '['  shift, and go to state 71
+    '('  shift, and go to state 72
+
+    $default  reduce using rule 41 (variable)
+
+    var_tab  go to state 73
+
+
+State 49
+
+    6 declaration: type . liste_declarateurs ';'
+
+    identificateur  shift, and go to state 28
+
+    liste_declarateurs  go to state 15
+    declarateur         go to state 16
+
+
+State 50
+
+   39 bloc: '{' liste_declarations liste_instructions . '}'
+
+    '}'  shift, and go to state 74
+
+
+State 51
+
+   20 liste_instructions: instruction . liste_instructions
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    $default  reduce using rule 21 (liste_instructions)
+
+    liste_instructions  go to state 75
+    instruction         go to state 51
+    iteration           go to state 52
+    selection           go to state 53
+    saut                go to state 54
+    affectation         go to state 55
+    bloc                go to state 56
+    appel               go to state 57
+    variable            go to state 58
+
+
+State 52
+
+   22 instruction: iteration .
+
+    $default  reduce using rule 22 (instruction)
+
+
+State 53
+
+   23 instruction: selection .
+
+    $default  reduce using rule 23 (instruction)
+
+
+State 54
+
+   24 instruction: saut .
+
+    $default  reduce using rule 24 (instruction)
+
+
+State 55
+
+   25 instruction: affectation . ';'
+
+    ';'  shift, and go to state 76
+
+
+State 56
+
+   26 instruction: bloc .
+
+    $default  reduce using rule 26 (instruction)
+
+
+State 57
+
+   27 instruction: appel .
+
+    $default  reduce using rule 27 (instruction)
+
+
+State 58
+
+   38 affectation: variable . '=' expression
+
+    '='  shift, and go to state 77
+
+
+State 59
+
+   30 selection: C_IF '(' . condition ')' instruction
+   31          | C_IF '(' . condition ')' instruction C_ELSE instruction
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 80
+    condition   go to state 81
+
+
+State 60
+
+   32 selection: C_SWITCH '(' . expression ')' '{' switch_body '}'
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 82
+
+
+State 61
+
+   35 saut: C_BREAK ';' .
+
+    $default  reduce using rule 35 (saut)
+
+
+State 62
+
+   28 iteration: C_FOR '(' . affectation ';' condition ';' affectation ')' instruction
+
+    identificateur  shift, and go to state 83
+
+    affectation  go to state 84
+    variable     go to state 58
+
+
+State 63
+
+   29 iteration: C_WHILE '(' . condition ')' instruction
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 80
+    condition   go to state 85
+
+
+State 64
+
+   54 expression: C_MINUS . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 86
+
+
+State 65
+
+   41 variable: identificateur .
+   42         | identificateur . var_tab
+   57 expression: identificateur . '(' liste_expressions ')'
+
+    '['  shift, and go to state 71
+    '('  shift, and go to state 87
+
+    $default  reduce using rule 41 (variable)
+
+    var_tab  go to state 73
+
+
+State 66
+
+   55 expression: constante .
+
+    $default  reduce using rule 55 (expression)
+
+
+State 67
+
+   36 saut: C_RETURN ';' .
+
+    $default  reduce using rule 36 (saut)
+
+
+State 68
+
+   45 expression: '(' . expression ')'
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 88
+
+
+State 69
+
+   56 expression: variable .
+
+    $default  reduce using rule 56 (expression)
+
+
+State 70
+
+   37 saut: C_RETURN expression . ';'
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    ';'          shift, and go to state 97
+
+
+State 71
+
+   43 var_tab: '[' . expression ']' var_tab
+   44        | '[' . expression ']'
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 98
+
+
+State 72
+
+   40 appel: identificateur '(' . liste_expressions ')' ';'
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    $default  reduce using rule 59 (liste_expressions)
+
+    variable           go to state 69
+    expression         go to state 99
+    liste_expressions  go to state 100
+    l_expressions      go to state 101
+
+
+State 73
+
+   42 variable: identificateur var_tab .
+
+    $default  reduce using rule 42 (variable)
+
+
+State 74
+
+   39 bloc: '{' liste_declarations liste_instructions '}' .
+
+    $default  reduce using rule 39 (bloc)
+
+
+State 75
+
+   20 liste_instructions: instruction liste_instructions .
+
+    $default  reduce using rule 20 (liste_instructions)
+
+
+State 76
+
+   25 instruction: affectation ';' .
+
+    $default  reduce using rule 25 (instruction)
+
+
+State 77
+
+   38 affectation: variable '=' . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 102
+
+
+State 78
+
+   62 condition: C_NOT . '(' condition ')'
+
+    '('  shift, and go to state 103
+
+
+State 79
+
+   45 expression: '(' . expression ')'
+   63 condition: '(' . condition ')'
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 104
+    condition   go to state 105
+
+
+State 80
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   66 condition: expression . C_LT expression
+   67          | expression . C_GT expression
+   68          | expression . GTE expression
+   69          | expression . LTE expression
+   70          | expression . EQUALS expression
+   71          | expression . NOT_EQUALS expression
+
+    EQUALS       shift, and go to state 106
+    GTE          shift, and go to state 107
+    LTE          shift, and go to state 108
+    NOT_EQUALS   shift, and go to state 109
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    C_LT         shift, and go to state 110
+    C_GT         shift, and go to state 111
+
+
+State 81
+
+   30 selection: C_IF '(' condition . ')' instruction
+   31          | C_IF '(' condition . ')' instruction C_ELSE instruction
+   64 condition: condition . LOGICAL_AND condition
+   65          | condition . LOGICAL_OR condition
+
+    LOGICAL_AND  shift, and go to state 112
+    LOGICAL_OR   shift, and go to state 113
+    ')'          shift, and go to state 114
+
+
+State 82
+
+   32 selection: C_SWITCH '(' expression . ')' '{' switch_body '}'
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    ')'          shift, and go to state 115
+
+
+State 83
+
+   41 variable: identificateur .
+   42         | identificateur . var_tab
+
+    '['  shift, and go to state 71
+
+    $default  reduce using rule 41 (variable)
+
+    var_tab  go to state 73
+
+
+State 84
+
+   28 iteration: C_FOR '(' affectation . ';' condition ';' affectation ')' instruction
+
+    ';'  shift, and go to state 116
+
+
+State 85
+
+   29 iteration: C_WHILE '(' condition . ')' instruction
+   64 condition: condition . LOGICAL_AND condition
+   65          | condition . LOGICAL_OR condition
+
+    LOGICAL_AND  shift, and go to state 112
+    LOGICAL_OR   shift, and go to state 113
+    ')'          shift, and go to state 117
+
+
+State 86
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   54           | C_MINUS expression .
+
+    $default  reduce using rule 54 (expression)
+
+
+State 87
+
+   57 expression: identificateur '(' . liste_expressions ')'
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    $default  reduce using rule 59 (liste_expressions)
+
+    variable           go to state 69
+    expression         go to state 99
+    liste_expressions  go to state 118
+    l_expressions      go to state 101
+
+
+State 88
+
+   45 expression: '(' expression . ')'
+   46           | expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    ')'          shift, and go to state 119
+
+
+State 89
+
+   50 expression: expression LEFT_SHIFT . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 120
+
+
+State 90
+
+   51 expression: expression RIGHT_SHIFT . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 121
+
+
+State 91
+
+   46 expression: expression C_PLUS . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 122
+
+
+State 92
+
+   47 expression: expression C_MINUS . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 123
+
+
+State 93
+
+   48 expression: expression C_MULT . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 124
+
+
+State 94
+
+   49 expression: expression C_DIV . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 125
+
+
+State 95
+
+   52 expression: expression C_BIN_AND . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 126
+
+
+State 96
+
+   53 expression: expression C_BIN_OR . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 127
+
+
+State 97
+
+   37 saut: C_RETURN expression ';' .
+
+    $default  reduce using rule 37 (saut)
+
+
+State 98
+
+   43 var_tab: '[' expression . ']' var_tab
+   44        | '[' expression . ']'
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    ']'          shift, and go to state 128
+
+
+State 99
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   60 l_expressions: expression .
+   61              | expression . ',' l_expressions
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    ','          shift, and go to state 129
+
+    $default  reduce using rule 60 (l_expressions)
+
+
+State 100
+
+   40 appel: identificateur '(' liste_expressions . ')' ';'
+
+    ')'  shift, and go to state 130
+
+
+State 101
+
+   58 liste_expressions: l_expressions .
+
+    $default  reduce using rule 58 (liste_expressions)
+
+
+State 102
+
+   38 affectation: variable '=' expression .
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 38 (affectation)
+
+
+State 103
+
+   62 condition: C_NOT '(' . condition ')'
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 80
+    condition   go to state 131
+
+
+State 104
+
+   45 expression: '(' expression . ')'
+   46           | expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   66 condition: expression . C_LT expression
+   67          | expression . C_GT expression
+   68          | expression . GTE expression
+   69          | expression . LTE expression
+   70          | expression . EQUALS expression
+   71          | expression . NOT_EQUALS expression
+
+    EQUALS       shift, and go to state 106
+    GTE          shift, and go to state 107
+    LTE          shift, and go to state 108
+    NOT_EQUALS   shift, and go to state 109
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+    C_LT         shift, and go to state 110
+    C_GT         shift, and go to state 111
+    ')'          shift, and go to state 119
+
+
+State 105
+
+   63 condition: '(' condition . ')'
+   64          | condition . LOGICAL_AND condition
+   65          | condition . LOGICAL_OR condition
+
+    LOGICAL_AND  shift, and go to state 112
+    LOGICAL_OR   shift, and go to state 113
+    ')'          shift, and go to state 132
+
+
+State 106
+
+   70 condition: expression EQUALS . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 133
+
+
+State 107
+
+   68 condition: expression GTE . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 134
+
+
+State 108
+
+   69 condition: expression LTE . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 135
+
+
+State 109
+
+   71 condition: expression NOT_EQUALS . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 136
+
+
+State 110
+
+   66 condition: expression C_LT . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 137
+
+
+State 111
+
+   67 condition: expression C_GT . expression
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable    go to state 69
+    expression  go to state 138
+
+
+State 112
+
+   64 condition: condition LOGICAL_AND . condition
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 80
+    condition   go to state 139
+
+
+State 113
+
+   65 condition: condition LOGICAL_OR . condition
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 80
+    condition   go to state 140
+
+
+State 114
+
+   30 selection: C_IF '(' condition ')' . instruction
+   31          | C_IF '(' condition ')' . instruction C_ELSE instruction
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    instruction  go to state 141
+    iteration    go to state 52
+    selection    go to state 53
+    saut         go to state 54
+    affectation  go to state 55
+    bloc         go to state 56
+    appel        go to state 57
+    variable     go to state 58
+
+
+State 115
+
+   32 selection: C_SWITCH '(' expression ')' . '{' switch_body '}'
+
+    '{'  shift, and go to state 142
+
+
+State 116
+
+   28 iteration: C_FOR '(' affectation ';' . condition ';' affectation ')' instruction
+
+    C_MINUS         shift, and go to state 64
+    C_NOT           shift, and go to state 78
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 79
+
+    variable    go to state 69
+    expression  go to state 80
+    condition   go to state 143
+
+
+State 117
+
+   29 iteration: C_WHILE '(' condition ')' . instruction
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    instruction  go to state 144
+    iteration    go to state 52
+    selection    go to state 53
+    saut         go to state 54
+    affectation  go to state 55
+    bloc         go to state 56
+    appel        go to state 57
+    variable     go to state 58
+
+
+State 118
+
+   57 expression: identificateur '(' liste_expressions . ')'
+
+    ')'  shift, and go to state 145
+
+
+State 119
+
+   45 expression: '(' expression ')' .
+
+    $default  reduce using rule 45 (expression)
+
+
+State 120
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   50           | expression LEFT_SHIFT expression .
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    C_BIN_AND  shift, and go to state 95
+    C_BIN_OR   shift, and go to state 96
+
+    $default  reduce using rule 50 (expression)
+
+
+State 121
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   51           | expression RIGHT_SHIFT expression .
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    C_BIN_AND  shift, and go to state 95
+    C_BIN_OR   shift, and go to state 96
+
+    $default  reduce using rule 51 (expression)
+
+
+State 122
+
+   46 expression: expression . C_PLUS expression
+   46           | expression C_PLUS expression .
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 46 (expression)
+
+
+State 123
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   47           | expression C_MINUS expression .
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 47 (expression)
+
+
+State 124
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   48           | expression C_MULT expression .
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 48 (expression)
+
+
+State 125
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   49           | expression C_DIV expression .
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 49 (expression)
+
+
+State 126
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   52           | expression C_BIN_AND expression .
+   53           | expression . C_BIN_OR expression
+
+    $default  reduce using rule 52 (expression)
+
+
+State 127
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   53           | expression C_BIN_OR expression .
+
+    $default  reduce using rule 53 (expression)
+
+
+State 128
+
+   43 var_tab: '[' expression ']' . var_tab
+   44        | '[' expression ']' .
+
+    '['  shift, and go to state 71
+
+    $default  reduce using rule 44 (var_tab)
+
+    var_tab  go to state 146
+
+
+State 129
+
+   61 l_expressions: expression ',' . l_expressions
+
+    C_MINUS         shift, and go to state 64
+    identificateur  shift, and go to state 65
+    constante       shift, and go to state 66
+    '('             shift, and go to state 68
+
+    variable       go to state 69
+    expression     go to state 99
+    l_expressions  go to state 147
+
+
+State 130
+
+   40 appel: identificateur '(' liste_expressions ')' . ';'
+
+    ';'  shift, and go to state 148
+
+
+State 131
+
+   62 condition: C_NOT '(' condition . ')'
+   64          | condition . LOGICAL_AND condition
+   65          | condition . LOGICAL_OR condition
+
+    LOGICAL_AND  shift, and go to state 112
+    LOGICAL_OR   shift, and go to state 113
+    ')'          shift, and go to state 149
+
+
+State 132
+
+   63 condition: '(' condition ')' .
+
+    $default  reduce using rule 63 (condition)
+
+
+State 133
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   70 condition: expression EQUALS expression .
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 70 (condition)
+
+
+State 134
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   68 condition: expression GTE expression .
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 68 (condition)
+
+
+State 135
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   69 condition: expression LTE expression .
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 69 (condition)
+
+
+State 136
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   71 condition: expression NOT_EQUALS expression .
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 71 (condition)
+
+
+State 137
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   66 condition: expression C_LT expression .
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 66 (condition)
+
+
+State 138
+
+   46 expression: expression . C_PLUS expression
+   47           | expression . C_MINUS expression
+   48           | expression . C_MULT expression
+   49           | expression . C_DIV expression
+   50           | expression . LEFT_SHIFT expression
+   51           | expression . RIGHT_SHIFT expression
+   52           | expression . C_BIN_AND expression
+   53           | expression . C_BIN_OR expression
+   67 condition: expression C_GT expression .
+
+    LEFT_SHIFT   shift, and go to state 89
+    RIGHT_SHIFT  shift, and go to state 90
+    C_PLUS       shift, and go to state 91
+    C_MINUS      shift, and go to state 92
+    C_MULT       shift, and go to state 93
+    C_DIV        shift, and go to state 94
+    C_BIN_AND    shift, and go to state 95
+    C_BIN_OR     shift, and go to state 96
+
+    $default  reduce using rule 67 (condition)
+
+
+State 139
+
+   64 condition: condition . LOGICAL_AND condition
+   64          | condition LOGICAL_AND condition .
+   65          | condition . LOGICAL_OR condition
+
+    $default  reduce using rule 64 (condition)
+
+
+State 140
+
+   64 condition: condition . LOGICAL_AND condition
+   65          | condition . LOGICAL_OR condition
+   65          | condition LOGICAL_OR condition .
+
+    $default  reduce using rule 65 (condition)
+
+
+State 141
+
+   30 selection: C_IF '(' condition ')' instruction .
+   31          | C_IF '(' condition ')' instruction . C_ELSE instruction
+
+    C_ELSE  shift, and go to state 150
+
+    $default  reduce using rule 30 (selection)
+
+
+State 142
+
+   32 selection: C_SWITCH '(' expression ')' '{' . switch_body '}'
+
+    C_CASE     shift, and go to state 151
+    C_DEFAULT  shift, and go to state 152
+
+    switch_body  go to state 153
+
+
+State 143
+
+   28 iteration: C_FOR '(' affectation ';' condition . ';' affectation ')' instruction
+   64 condition: condition . LOGICAL_AND condition
+   65          | condition . LOGICAL_OR condition
+
+    LOGICAL_AND  shift, and go to state 112
+    LOGICAL_OR   shift, and go to state 113
+    ';'          shift, and go to state 154
+
+
+State 144
+
+   29 iteration: C_WHILE '(' condition ')' instruction .
+
+    $default  reduce using rule 29 (iteration)
+
+
+State 145
+
+   57 expression: identificateur '(' liste_expressions ')' .
+
+    $default  reduce using rule 57 (expression)
+
+
+State 146
+
+   43 var_tab: '[' expression ']' var_tab .
+
+    $default  reduce using rule 43 (var_tab)
+
+
+State 147
+
+   61 l_expressions: expression ',' l_expressions .
+
+    $default  reduce using rule 61 (l_expressions)
+
+
+State 148
+
+   40 appel: identificateur '(' liste_expressions ')' ';' .
+
+    $default  reduce using rule 40 (appel)
+
+
+State 149
+
+   62 condition: C_NOT '(' condition ')' .
+
+    $default  reduce using rule 62 (condition)
+
+
+State 150
+
+   31 selection: C_IF '(' condition ')' instruction C_ELSE . instruction
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    instruction  go to state 155
+    iteration    go to state 52
+    selection    go to state 53
+    saut         go to state 54
+    affectation  go to state 55
+    bloc         go to state 56
+    appel        go to state 57
+    variable     go to state 58
+
+
+State 151
+
+   33 switch_body: C_CASE . constante ':' liste_instructions switch_body
+
+    constante  shift, and go to state 156
+
+
+State 152
+
+   34 switch_body: C_DEFAULT . ':' liste_instructions
+
+    ':'  shift, and go to state 157
+
+
+State 153
+
+   32 selection: C_SWITCH '(' expression ')' '{' switch_body . '}'
+
+    '}'  shift, and go to state 158
+
+
+State 154
+
+   28 iteration: C_FOR '(' affectation ';' condition ';' . affectation ')' instruction
+
+    identificateur  shift, and go to state 83
+
+    affectation  go to state 159
+    variable     go to state 58
+
+
+State 155
+
+   31 selection: C_IF '(' condition ')' instruction C_ELSE instruction .
+
+    $default  reduce using rule 31 (selection)
+
+
+State 156
+
+   33 switch_body: C_CASE constante . ':' liste_instructions switch_body
+
+    ':'  shift, and go to state 160
+
+
+State 157
+
+   34 switch_body: C_DEFAULT ':' . liste_instructions
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    $default  reduce using rule 21 (liste_instructions)
+
+    liste_instructions  go to state 161
+    instruction         go to state 51
+    iteration           go to state 52
+    selection           go to state 53
+    saut                go to state 54
+    affectation         go to state 55
+    bloc                go to state 56
+    appel               go to state 57
+    variable            go to state 58
+
+
+State 158
+
+   32 selection: C_SWITCH '(' expression ')' '{' switch_body '}' .
+
+    $default  reduce using rule 32 (selection)
+
+
+State 159
+
+   28 iteration: C_FOR '(' affectation ';' condition ';' affectation . ')' instruction
+
+    ')'  shift, and go to state 162
+
+
+State 160
+
+   33 switch_body: C_CASE constante ':' . liste_instructions switch_body
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    $default  reduce using rule 21 (liste_instructions)
+
+    liste_instructions  go to state 163
+    instruction         go to state 51
+    iteration           go to state 52
+    selection           go to state 53
+    saut                go to state 54
+    affectation         go to state 55
+    bloc                go to state 56
+    appel               go to state 57
+    variable            go to state 58
+
+
+State 161
+
+   34 switch_body: C_DEFAULT ':' liste_instructions .
+
+    $default  reduce using rule 34 (switch_body)
+
+
+State 162
+
+   28 iteration: C_FOR '(' affectation ';' condition ';' affectation ')' . instruction
+
+    C_IF            shift, and go to state 42
+    C_SWITCH        shift, and go to state 43
+    C_BREAK         shift, and go to state 44
+    C_FOR           shift, and go to state 45
+    C_WHILE         shift, and go to state 46
+    C_RETURN        shift, and go to state 47
+    identificateur  shift, and go to state 48
+    '{'             shift, and go to state 37
+
+    instruction  go to state 164
+    iteration    go to state 52
+    selection    go to state 53
+    saut         go to state 54
+    affectation  go to state 55
+    bloc         go to state 56
+    appel        go to state 57
+    variable     go to state 58
+
+
+State 163
+
+   33 switch_body: C_CASE constante ':' liste_instructions . switch_body
+
+    C_CASE     shift, and go to state 151
+    C_DEFAULT  shift, and go to state 152
+
+    switch_body  go to state 165
+
+
+State 164
+
+   28 iteration: C_FOR '(' affectation ';' condition ';' affectation ')' instruction .
+
+    $default  reduce using rule 28 (iteration)
+
+
+State 165
+
+   33 switch_body: C_CASE constante ':' liste_instructions switch_body .
+
+    $default  reduce using rule 33 (switch_body)

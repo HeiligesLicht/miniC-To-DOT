@@ -10,49 +10,51 @@ int yylineno;
 
 func_list* root;
 
+functions* all_functions;
+scope* all_scopes;
+
 %}
 
 %union {
 	char* name;
 	node_dot* node;
 	func_list* functions;
+	param* param;
 }
 
 %locations
 
-%token C_INT C_VOID C_IF C_ELSE C_SWITCH C_CASE C_BREAK C_EXTERN C_DEFAULT C_FOR C_WHILE C_RETURN EQUALS GTE LTE NOT_EQUALS LEFT_SHIFT RIGHT_SHIFT LOGICAL_AND LOGICAL_OR C_PLUS C_MINUS C_MULT C_DIV C_BIN_AND C_BIN_OR C_NOT C_LT C_GT 
-
-%token <name> identificateur constante
+%token <name> C_INT C_VOID C_IF C_ELSE C_SWITCH C_CASE C_BREAK C_EXTERN C_DEFAULT C_FOR C_WHILE C_RETURN EQUALS GTE LTE NOT_EQUALS LEFT_SHIFT RIGHT_SHIFT LOGICAL_AND LOGICAL_OR C_PLUS C_MINUS C_MULT C_DIV C_BIN_AND C_BIN_OR C_NOT C_LT C_GT identificateur constante
 
 %type <name> type
-%type <node> programme fonction liste_instructions instruction bloc expression affectation variable var_tab binary_op saut appel liste_expressions l_expressions condition selection switch_body iteration binary_rel binary_comp
+%type <node> programme fonction liste_instructions instruction bloc expression affectation variable var_tab saut appel liste_expressions l_expressions condition selection switch_body iteration  
 %type <functions> liste_fonctions
-
+%type <param> liste_parms l_parms parm
 
 %left C_PLUS C_MINUS
 %left C_MULT C_DIV
 %left LEFT_SHIFT RIGHT_SHIFT
 %left C_BIN_OR C_BIN_AND
 %left LOGICAL_AND LOGICAL_OR
-%left COMP
-%left REL
 %nonassoc UNARY_MINUS
 %nonassoc THEN
-%nonassoc ELSE
+%nonassoc C_ELSE
+
+%start programme
 
 %%
 programme : liste_declarations liste_fonctions { root = $2; }
 
-liste_declarations : declaration liste_declarations
-		    |
+liste_declarations : liste_declarations declaration
+		    		|
 
 liste_fonctions : fonction liste_fonctions { $$ = add_func($1, $2); }
 		| fonction { $$ = add_func($1, NULL); }
 
-declaration : C_INT liste_declarateurs ';'
+declaration	: type liste_declarateurs ';'
 
-liste_declarateurs : declarateur ','  liste_declarateurs 
-		    | declarateur
+liste_declarateurs	: liste_declarateurs ',' declarateur
+					|	declarateur
 
 declarateur : identificateur 
 	    | declarateur '[' constante ']'
@@ -60,18 +62,23 @@ declarateur : identificateur
 fonction : type identificateur  '(' liste_parms  ')'  bloc { char* s = NULL;
 															 asprintf(&s, "[label=\"%s, %s\" shape=invtrapezium color=blue]", $2, $1);
 															 $$ = create_node( s);
-															 $$->child = $6; } 
-	    | C_EXTERN type identificateur  '(' liste_parms  ')' ';' {$$ = NULL;}
+															 $$->child = $6;
+															 all_functions = add_function(create_function(strcmp($1, "int") == 0? INT : VOID, $2, $4), all_functions);} 
+	    | C_EXTERN type identificateur  '(' liste_parms  ')' ';' {
+			$$ = NULL;
+			all_functions = add_function(create_function(strcmp($2, "int") == 0? INT : VOID, $3, $5), all_functions);
+}
 
-type :  C_VOID { $$ =  "void";}
+type :  C_VOID { $$ = "void"; }
 		| C_INT { $$ = "int"; }
 
-liste_parms : 	l_parms
-				| 
+liste_parms : 	l_parms { $$ = $1; }
+				| {$$ = NULL;}
 
-l_parms : parm | parm ',' l_parms
+l_parms : parm {$$ = add_param($1, NULL);}
+		| parm ',' l_parms {$$ = add_param($1, $3);}
 
-parm : C_INT identificateur
+parm : C_INT identificateur { $$ = create_param(INT, $2); }
 
 liste_instructions : instruction liste_instructions { $$ = $1;
 													  $$->sibling = $2;}
@@ -99,7 +106,7 @@ selection : C_IF  '(' condition  ')' instruction %prec THEN {
 	$3->sibling = $5;
 	$$->child = $3;
 }
-	    | C_IF  '(' condition  ')' instruction C_ELSE instruction %prec ELSE {
+	    | C_IF  '(' condition  ')' instruction C_ELSE instruction {
 	$$ = create_node("[label=\"IF\" shape=diamond]");
 	$3->sibling = $5;
 	$5->sibling = $7;
@@ -121,10 +128,8 @@ switch_body : C_CASE constante ':' liste_instructions switch_body {
 	char* s = NULL;
 	asprintf(&s, "[label=\"DEFAULT\"]");
 	$$ = create_node(s);
-	$$->sibling = $4;
 	$$->child = $3;
 }
-			| { $$ = NULL; }
 
 saut : C_BREAK ';' { $$ = create_node("[label=\"BREAK\" shape=box]"); }
 	| C_RETURN ';' { $$ = create_node("[label=\"RETURN\" shape=trapezium color=blue]"); }
@@ -139,6 +144,12 @@ appel : identificateur '(' liste_expressions ')' ';' {
 	asprintf(&s, "[label=\"%s\" shape=septagon]", $1);
 	$$ = create_node(s);
 	$$->child = $3;
+
+	if (search_function($1, all_functions) == NULL) {
+		char* s = NULL;
+		asprintf(&s, "function : %s is not defined.\n", $1);
+		yyerror(s);
+	}
 }
 
 variable : 	identificateur {
@@ -146,10 +157,17 @@ variable : 	identificateur {
 	asprintf(&s, "[label=\"%s\" shape=septagon]", $1);
 	$$ = create_node(s);
 }
-			| variable var_tab {$$ = create_node("[label=\"TAB\"]"); $$->child = $1; $$->child->sibling = $2; }
+	|	identificateur var_tab {
+		$$ = create_node("[label=\"TAB\"]");
+		char* s = NULL;
+		asprintf(&s, "[label=\"%s\" shape=septagon]", $1);
+		$$->child = create_node(s);
+		$$->child->sibling = $2;
+}
 
-var_tab : '[' expression ']' {$$ = $2;}
-		| '[' expression ']' var_tab {$2->sibling = $4; $$ = $2;}
+var_tab	: '[' expression ']' var_tab { $2->sibling = $4; $$ = $2; }
+		| '[' expression ']' { $$ = $2; }
+
 
 expression :  '(' expression ')' {$$ = $2;}
 		| expression C_PLUS expression {$$ = create_node("[label=\"+\"]"); $$->child = $1; $$->child->sibling = $3;}
@@ -200,13 +218,14 @@ int SEQ = 0;
 int main() {
 	if (yyparse() == 0) {
 		print_compilation(root);	
+		// print_functions(all_functions);
 	} else {
-		free_node
+		free_all_nodes(root);
 	}
 }
 
 int yyerror(char* s) {
-	fprintf(stderr, "%s at line: %d.\n", s, yylineno);
+	fprintf(stderr, "%s", s);
 	exit(1);
 }
 
@@ -230,11 +249,33 @@ void free_node(node_dot* root) {
 	free(root);
 }
 
+void free_all_nodes(func_list* root) {
+	func_list* explore = root;
+	while (explore != NULL) {
+		free_node(explore->current);
+		explore = explore->next;
+	}
+}
+
 func_list* add_func(node_dot* node, func_list* prevlist) {
 	func_list* newfunclist = (func_list*) malloc(sizeof(func_list));
 	newfunclist->current = node;
 	newfunclist->next = prevlist;
 	return newfunclist;
+};
+
+
+param* create_param(types type, char* name) {
+	param* p = (param*) malloc(sizeof(param));
+	p->type = type;
+	p->name = name;
+	p->next = NULL;
+	return p;
+};
+
+param* add_param(param* first, param* rest) {
+	first->next = rest;
+	return first;
 };
 
 
@@ -259,7 +300,7 @@ void print_compilation(func_list* root) {
 	fprintf(stdout, "}\n");
 }
 
-function* create_function(func_type type, char* name, param* pars) {
+function* create_function(types type, char* name, param* pars) {
 	function* f = (function*) malloc(sizeof(function));
 	f->type = type;
 	f->name = strdup(name);	
@@ -267,7 +308,7 @@ function* create_function(func_type type, char* name, param* pars) {
 	return f;
 }
 
-function* add_function(function* func, functions* func_list) {
+functions* add_function(function* func, functions* func_list) {
 	functions* newfunclist = (functions*) malloc(sizeof(functions));
 	newfunclist->f = func;
 	newfunclist->next = func_list;
@@ -275,13 +316,13 @@ function* add_function(function* func, functions* func_list) {
 }
 
 function* search_function(char* name, functions* func_list) {
-	for(function* f = func_list->f; func_list != NULL; f = func_list->next) {
+	for(function* f = func_list->f; f != NULL && func_list->next != NULL; f = func_list->next->f) {
 		if (strcmp(name, f->name) == 0) return f;
 	}
 	return NULL;
 }
 
-variable* create_variable(dec_type type, char* name, int value) {
+variable* create_variable(types type, char* name, int value) {
 	variable* var = (variable*) malloc(sizeof(variable));
 	var->type = type;
 	var->name = strdup(name);
@@ -289,7 +330,7 @@ variable* create_variable(dec_type type, char* name, int value) {
 	return var;
 }
 
-variable* add_variable(variable* var, scope* scope) {
+scope* add_variable(variable* var, scope* scope) {
 	var->next = scope->var;
 	scope->var = var;
 	return scope;
@@ -302,3 +343,36 @@ variable* search_variable(char* name, scope* scope) {
 	return NULL;
 }
 
+scope* init_scope() {
+	scope* s = (scope*) malloc(sizeof(scope));
+	s->var = NULL;
+	s->next = NULL;
+	return s;
+}
+
+scope* push_scope(scope* to_push, scope* scopes) {
+	to_push->next = scopes;
+	return to_push;
+}
+
+scope* pop_scope(scope* scopes) {
+	scope* s = scopes->next;
+	free(scopes);
+	return s;
+}
+
+void print_functions(functions* fs) {
+	functions* explore = fs;
+	while (explore != NULL) {
+		print_function(explore->f);
+		explore = explore->next;
+	}
+}
+
+void print_function(function* f) {
+	fprintf(stdout, "%s (", f->name);
+	for(param* p = f->params; p != NULL; p = p->next) {
+		fprintf(stdout, " %s ", p->name);
+	}
+	fprintf(stdout, ");\n");
+}

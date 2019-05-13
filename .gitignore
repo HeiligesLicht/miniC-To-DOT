@@ -56,3 +56,4 @@ dkms.conf
 **/*.tab.c
 **/*.tab.h
 **/*.out
+**/.vscode

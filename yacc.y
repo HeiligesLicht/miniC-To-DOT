@@ -11,15 +11,18 @@ int yylineno;
 func_list* root;
 
 functions* all_functions;
-scope* all_scopes;
+scope* global_scope;
+
+int current_scope = 0; // 0 is global scope, 1 is function scope.
 
 %}
 
 %union {
 	char* name;
 	node_dot* node;
-	func_list* functions;
+	func_list* func_dot;
 	param* param;
+	dim* dim;
 }
 
 %locations
@@ -28,8 +31,9 @@ scope* all_scopes;
 
 %type <name> type
 %type <node> programme fonction liste_instructions instruction bloc expression affectation variable var_tab saut appel liste_expressions l_expressions condition selection switch_body iteration  
-%type <functions> liste_fonctions
+%type <func_dot> liste_fonctions
 %type <param> liste_parms l_parms parm
+%type <dim> dec_tab
 
 %left C_PLUS C_MINUS
 %left C_MULT C_DIV
@@ -56,19 +60,34 @@ declaration	: type liste_declarateurs ';'
 liste_declarateurs	: liste_declarateurs ',' declarateur
 					|	declarateur
 
-declarateur : identificateur 
-	    | identificateur dec_tab
+declarateur : identificateur { 	variable* var = create_variable(INT, strdup($1), FALSE, NULL);
+								if (current_scope == 0)
+									global_scope = add_variable(var, global_scope);
+								else
+									if (all_functions != NULL)
+										all_functions->f->clojure = add_variable(var, all_functions->f->clojure); }
+	    | identificateur dec_tab {	variable* var = create_variable(INT, $1, FALSE, NULL);
+									var->dim = $2;
+									if (current_scope == 0)
+										global_scope = add_variable(var, global_scope);
+									else
+										if (all_functions != NULL)
+											all_functions->f->clojure = add_variable(var, all_functions->f->clojure); }
 
-dec_tab : '[' constante ']' dec_tab
-		| '[' constante ']'
+dec_tab : '[' constante ']' dec_tab { $$ = add_dim(create_dim(atoi($2)), $4);}
+		| '[' constante ']' { $$ = create_dim(atoi($2)); }
 
-fonction : type identificateur  '(' liste_parms  ')'  bloc { char* s = NULL;
-															 asprintf(&s, "[label=\"%s, %s\" shape=invtrapezium color=blue]", $2, $1);
-															 $$ = create_node( s);
-															 $$->child = $6;
-
-															 function* f = add_function(create_function(strcmp($1, "int") == 0? INT : VOID, $2, $4), all_functions);
-															 f->clojure = head_scope(scopes); } 
+fonction : type identificateur  '(' liste_parms  ')' {
+	current_scope = 1;
+	function* f = create_function(strcmp($1, "int") == 0? INT : VOID, $2, $4);
+	f->clojure = push_scope(head_scope(global_scope), f->clojure);
+	all_functions = add_function(f, all_functions);
+} bloc { 
+	char* s = NULL;
+	 asprintf(&s, "[label=\"%s, %s\" shape=invtrapezium color=blue]", $2, $1);
+	 $$ = create_node( s);
+	 $$->child = $7;
+	 current_scope = 0; }
 	    | C_EXTERN type identificateur  '(' liste_parms  ')' ';' {
 			$$ = NULL;
 			all_functions = add_function(create_function(strcmp($2, "int") == 0? INT : VOID, $3, $5), all_functions);
@@ -140,9 +159,12 @@ saut : C_BREAK ';' { $$ = create_node("[label=\"BREAK\" shape=box]"); }
 	| C_RETURN ';' { $$ = create_node("[label=\"RETURN\" shape=trapezium color=blue]"); }
 	| C_RETURN expression ';' { $$ = create_node("[label=\"RETURN\" shape=trapezium color=blue]"); $$->child = $2; }
 
-affectation : variable '=' expression { $$ = create_node("[label=\":=\"]"); $$->child = $1; $$->child->sibling = $3; }
+affectation : variable '=' expression { 
+	$$ = create_node("[label=\":=\"]");
+	$$->child = $1;
+	$$->child->sibling = $3;}
 
-bloc :  '{' {scopes = push_scope(init_scope(), scopes);} liste_declarations liste_instructions '}' { $$ = create_node("[label=\"BLOC\"]"); $$->child = $4; scopes = pop_scope(scopes) }
+bloc :  '{' {if (all_functions != NULL) all_functions->f->clojure = push_scope(init_scope(), all_functions->f->clojure);} liste_declarations liste_instructions '}' { $$ = create_node("[label=\"BLOC\"]"); $$->child = $4; }
 
 appel : identificateur '(' liste_expressions ')' ';' {
 	char* s = NULL;
@@ -161,6 +183,12 @@ variable : 	identificateur {
 	char* s = NULL;
 	asprintf(&s, "[label=\"%s\" shape=septagon]", $1);
 	$$ = create_node(s);
+
+	if (search_variable($1, (current_scope == 0)? global_scope : all_functions->f->clojure) == NULL) {
+		char* s = NULL;
+		asprintf(&s, "variable : %s is not defined.\n", $1);
+		yyerror(s);
+	}
 }
 	|	identificateur var_tab {
 		$$ = create_node("[label=\"TAB\"]");
@@ -221,9 +249,12 @@ int SEQ = 0;
 
 
 int main() {
+	global_scope = init_scope();
 	if (yyparse() == 0) {
-		print_compilation(root);	
-		// print_functions(all_functions);
+		// print_compilation(root);	
+		print_functions(all_functions);
+		print_all_functions_scopes(all_functions);
+		print_global_scope(global_scope);
 	} else {
 		free_all_nodes(root);
 	}
@@ -321,31 +352,49 @@ functions* add_function(function* func, functions* func_list) {
 }
 
 function* search_function(char* name, functions* func_list) {
-	for(function* f = func_list->f; f != NULL && func_list->next != NULL; f = func_list->next->f) {
+	for(function* f = func_list->f; f != NULL || func_list->next != NULL; f = func_list->next->f) {
 		if (strcmp(name, f->name) == 0) return f;
 	}
 	return NULL;
 }
 
-variable* create_variable(types type, char* name, int value) {
+variable* create_variable(types type, char* name, int is_defined, char* value) {
 	variable* var = (variable*) malloc(sizeof(variable));
 	var->type = type;
-	var->name = strdup(name);
-	var->value = value;
+	var->name = name;
+	if (value != NULL)
+		var->value = atoi(strdup(value));
+	var->is_defined = is_defined;
+	var->dim = NULL;
 	return var;
 }
 
 scope* add_variable(variable* var, scope* scope) {
-	var->next = scope->var;
-	scope->var = var;
+	if (scope->var == NULL) {
+		scope->var = var;
+	} else {
+		scope->var->next = var;
+	}
 	return scope;
 }
 
-variable* search_variable(char* name, scope* scope) {
-	for(variable* v = scope->var; v != NULL; v = v->next) {
-		if (strcmp(name, v->name) == 0) return v;
-	}
+variable* search_variable(char* name, scope* scopes) {
+	for(scope* s = scopes; s != NULL; s = s->next)
+		for(variable* v = s->var; v != NULL; v = v->next)
+			if (strcmp(name, v->name) == 0) return v;
 	return NULL;
+}
+
+dim* create_dim(int size) {
+	dim* d = (dim*) malloc(sizeof(dim));
+	d->size = size;
+	d->next = NULL;
+	return d;
+}
+
+dim* add_dim(dim* first, dim* rest) {
+	first->next = rest;
+	return first;
 }
 
 scope* init_scope() {
@@ -386,4 +435,49 @@ void print_function(function* f) {
 		fprintf(stdout, " %s ", p->name);
 	}
 	fprintf(stdout, ");\n");
+}
+
+void print_variable(variable* var) {
+	fprintf(stdout, "VARIABLE : %s, %s, %s, %d\n", 
+	var->name, 
+	(var->is_defined == FALSE)? "not assigned" : "assigned",
+	(var->type == INT)? "int" : "not an int",
+	(var->value));
+	if (var->dim != NULL) {
+		fprintf(stdout, "DIMENSIONS: ");
+		for(dim* d = var->dim; d != NULL; d = d->next) {
+			fprintf(stdout, "[%d]", d->size);
+		}
+		fprintf(stdout, "\n");
+	}
+}
+
+void print_all_variables(variable* var) {
+	for(variable* v = var; v != NULL; v = v->next) {
+		print_variable(v);
+	}
+}
+
+void print_all_functions_scopes(functions* fs) {
+	functions* explore = fs;
+	while (explore != NULL) {
+		print_scope(explore->f);
+		explore = explore->next;
+	}
+}
+
+void print_scope(function* f) {
+	for(scope* s = f->clojure; s != NULL; s = s->next) {
+		fprintf(stdout, "------------ BEGIN SCOPE (%s) ------------\n", f->name);
+		print_all_variables(s->var);
+		fprintf(stdout, "------------- END SCOPE (%s) -------------\n", f->name);
+	}
+}
+
+void print_global_scope(scope* scopes) {
+	fprintf(stdout, "------------ BEGIN GLOBAL SCOPE ------------\n");
+	for(scope* s = scopes; s != NULL; s = s->next) {
+		print_all_variables(s->var);
+	}
+	fprintf(stdout, "------------- END GLOBAL SCOPE -------------\n");
 }

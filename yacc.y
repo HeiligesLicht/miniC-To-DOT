@@ -80,7 +80,9 @@ dec_tab : '[' constante ']' dec_tab { $$ = add_dim(create_dim(atoi($2)), $4);}
 fonction : type identificateur  '(' liste_parms  ')' {
 	current_scope = 1;
 	function* f = create_function(strcmp($1, "int") == 0? INT : VOID, $2, $4);
-	f->clojure = push_scope(head_scope(global_scope), f->clojure);
+	if ($4 != NULL)
+		f->clojure = push_scope(param_scope($4), f->clojure);
+	f->clojure = push_scope(head_scope(global_scope), f->clojure);	
 	all_functions = add_function(f, all_functions);
 } bloc { 
 	char* s = NULL;
@@ -90,7 +92,10 @@ fonction : type identificateur  '(' liste_parms  ')' {
 	 current_scope = 0; }
 	    | C_EXTERN type identificateur  '(' liste_parms  ')' ';' {
 			$$ = NULL;
-			all_functions = add_function(create_function(strcmp($2, "int") == 0? INT : VOID, $3, $5), all_functions);
+			function* f = create_function(strcmp($2, "int") == 0? INT : VOID, $3, $5);
+			if ($5 != NULL)
+				f->clojure = push_scope(param_scope($5), f->clojure);
+			all_functions = add_function(f, all_functions);
 }
 
 type :  C_VOID { $$ = "void"; }
@@ -171,7 +176,7 @@ appel : identificateur '(' liste_expressions ')' ';' {
 	asprintf(&s, "[label=\"%s\" shape=septagon]", $1);
 	$$ = create_node(s);
 	$$->child = $3;
-
+	
 	if (search_function($1, all_functions) == NULL) {
 		char* s = NULL;
 		asprintf(&s, "function : %s is not defined.\n", $1);
@@ -193,7 +198,7 @@ variable : 	identificateur {
 	|	identificateur var_tab {
 		$$ = create_node("[label=\"TAB\"]");
 		char* s = NULL;
-		asprintf(&s, "[label=\"%s\" shape=septagon]", $1);
+		asprintf(&s, "[label=\"%s\" shape=septagon]", strdup($1));
 		$$->child = create_node(s);
 		$$->child->sibling = $2;
 }
@@ -217,12 +222,18 @@ expression :  '(' expression ')' {$$ = $2;}
 	asprintf(&s, "[label=\"%s\"]", $1);
 	$$ = create_node(s);
 }
-	    | variable { $$ = $1;}
+	    | variable { $$ = $1; }
 	    | identificateur  '(' liste_expressions  ')' {
 	char* s = NULL;
 	asprintf(&s, "[label=\"%s\"]", $1);
 	$$ = create_node(s);
 	$$->child = $3;
+
+	if (search_function($1, all_functions) == NULL) {
+		char* s = NULL;
+		asprintf(&s, "function : %s is not defined.\n", $1);
+		yyerror(s);
+	}
 }
 
 liste_expressions : l_expressions {$$ = $1;}
@@ -251,10 +262,10 @@ int SEQ = 0;
 int main() {
 	global_scope = init_scope();
 	if (yyparse() == 0) {
-		// print_compilation(root);	
-		print_functions(all_functions);
-		print_all_functions_scopes(all_functions);
-		print_global_scope(global_scope);
+		print_compilation(root);	
+		// print_functions(all_functions);
+		// print_all_functions_scopes(all_functions);
+		// print_global_scope(global_scope);
 	} else {
 		free_all_nodes(root);
 	}
@@ -352,8 +363,13 @@ functions* add_function(function* func, functions* func_list) {
 }
 
 function* search_function(char* name, functions* func_list) {
-	for(function* f = func_list->f; f != NULL || func_list->next != NULL; f = func_list->next->f) {
-		if (strcmp(name, f->name) == 0) return f;
+	function* f;
+	while (func_list != NULL) {
+		f = func_list->f;
+		if (strcmp(name, f->name) == 0) {
+			return f;
+		}
+		func_list = func_list->next;
 	}
 	return NULL;
 }
@@ -373,15 +389,18 @@ scope* add_variable(variable* var, scope* scope) {
 	if (scope->var == NULL) {
 		scope->var = var;
 	} else {
-		scope->var->next = var;
+		var->next = scope->var;
+		scope->var = var;
 	}
 	return scope;
 }
 
 variable* search_variable(char* name, scope* scopes) {
-	for(scope* s = scopes; s != NULL; s = s->next)
-		for(variable* v = s->var; v != NULL; v = v->next)
+	for(scope* s = scopes; s != NULL; s = s->next) {
+		for(variable* v = s->var; v != NULL; v = v->next) {
 			if (strcmp(name, v->name) == 0) return v;
+		}
+	}
 	return NULL;
 }
 
@@ -418,6 +437,15 @@ scope* pop_scope(scope* scopes) {
 scope* head_scope(scope* scopes) {
 	scope* s = scopes;
 	scopes->next = NULL;
+	return s;
+}
+
+scope* param_scope(param* pars) {
+	scope* s = init_scope();
+	for(param* p = pars; p != NULL; p = p->next) {
+		variable* v = create_variable(p->type, p->name, FALSE, NULL);
+		s = add_variable(v, s);
+	}
 	return s;
 }
 

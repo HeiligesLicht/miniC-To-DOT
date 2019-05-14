@@ -101,5 +101,6 @@ scope* init_scope();
 scope* push_scope(scope* to_push, scope* scopes);
 scope* pop_scope(scope* scopes);
 scope* head_scope(scope* scopes);
+scope* param_scope(param* pars);
 void print_scope(function* f);
 void print_global_scope(scope* scope);
